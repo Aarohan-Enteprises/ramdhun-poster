@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>रामधुन रैली - पोस्टर जनरेटर</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ctext y='54' font-size='56'%3E%F0%9F%9A%A9%3C/text%3E%3C/svg%3E" type="image/svg+xml">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1c1008;
+            background-image:
+                radial-gradient(ellipse at 50% 0%, rgba(230,120,20,0.18) 0%, transparent 55%),
+                radial-gradient(ellipse at 0% 100%, rgba(180,80,0,0.1) 0%, transparent 50%),
+                radial-gradient(ellipse at 100% 100%, rgba(200,100,10,0.08) 0%, transparent 50%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 16px 12px;
+            position: relative;
+        }
+
+        h1 {
+            color: #fff; text-align: center; margin-bottom: 4px; font-size: clamp(1.1rem, 4.5vw, 1.8rem);
+            text-shadow: 0 2px 8px rgba(0,0,0,0.4);
+            position: relative; z-index: 1;
+            padding: 0 8px;
+        }
+        .subtitle {
+            color: #e8944a; text-align: center; margin-bottom: 20px;
+            font-size: clamp(0.8rem, 3vw, 1rem);
+            position: relative; z-index: 1;
+            letter-spacing: 0.5px;
+        }
+
+        .container {
+            display: flex; gap: 30px;
+            justify-content: center; width: 100%; max-width: 1200px;
+            position: relative; z-index: 1;
+            align-items: flex-start;
+        }
+
+        .form-panel {
+            background: #241a10;
+            border-radius: 16px; padding: 20px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+            width: 360px; flex-shrink: 0;
+            border: 1px solid #3a2a18;
+        }
+
+        .form-panel h2 {
+            color: #e8944a; margin-bottom: 20px; font-size: 1.2rem;
+            border-bottom: 2px solid #e8944a; padding-bottom: 8px;
+        }
+
+        .form-group { margin-bottom: 16px; }
+        .form-group label {
+            display: block; margin-bottom: 6px;
+            font-weight: 600; color: #cca070; font-size: 0.95rem;
+        }
+
+        .form-group input[type="text"] {
+            width: 100%; padding: 10px 14px;
+            border: 1px solid #3a2a18;
+            border-radius: 8px; font-size: 1rem;
+            background: #1a1208; color: #f0dcc4;
+            transition: border-color 0.2s;
+        }
+        .form-group input[type="text"]::placeholder { color: #6a5540; }
+        .form-group input[type="text"]:focus {
+            outline: none; border-color: #e8944a;
+            box-shadow: 0 0 0 3px rgba(232,148,74,0.15);
+        }
+
+        .photo-upload {
+            border: 2px dashed #3a2a18; border-radius: 12px; padding: 20px;
+            text-align: center; cursor: pointer;
+            background: #1a1208; position: relative;
+            transition: all 0.2s;
+        }
+        .photo-upload:hover {
+            border-color: #e8944a; background: #221810;
+        }
+        .photo-upload input[type="file"] {
+            position: absolute; inset: 0; opacity: 0; cursor: pointer;
+        }
+        .photo-upload .placeholder { color: #8a7060; font-size: 0.9rem; }
+        .photo-upload .placeholder span { font-size: 2.5rem; display: block; margin-bottom: 6px; }
+
+        .image-controls {
+            margin-top: 12px; padding: 12px;
+            background: #1a1208;
+            border-radius: 10px; border: 1px solid #3a2a18;
+            display: none;
+        }
+        .image-controls.active { display: block; }
+        .image-controls label {
+            font-size: 0.85rem; color: #cca070; font-weight: 600;
+            display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
+        }
+        .image-controls input[type="range"] {
+            flex: 1; accent-color: #e8944a;
+        }
+        .image-controls .hint {
+            font-size: 0.75rem; color: #6a5540; margin-top: 4px;
+        }
+
+        .btn {
+            width: 100%; padding: 12px; border: none; border-radius: 10px;
+            font-size: 1rem; font-weight: 700; cursor: pointer; margin-top: 8px;
+            transition: all 0.2s;
+        }
+        .btn-download {
+            background: #e8944a; color: #1a0e04;
+        }
+        .btn-download:hover {
+            background: #f0a050;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(232,148,74,0.3);
+        }
+        .btn-download:disabled {
+            background: #2a2018; color: #5a4a3a;
+            cursor: not-allowed; transform: none;
+        }
+
+        .preview-panel {
+            background: #241a10;
+            border-radius: 16px; padding: 20px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+            border: 1px solid #3a2a18;
+            display: flex; flex-direction: column; align-items: center;
+            flex: 1; min-width: 0;
+        }
+        .preview-panel h2 {
+            color: #e8944a; margin-bottom: 16px; font-size: 1.2rem;
+            border-bottom: 2px solid #e8944a; padding-bottom: 8px; width: 100%;
+        }
+
+        .canvas-wrapper {
+            position: relative; cursor: grab; user-select: none;
+            width: 100%;
+        }
+        .canvas-wrapper:active { cursor: grabbing; }
+
+        #previewCanvas {
+            width: 100%; height: auto;
+            border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        .msg {
+            margin-top: 10px; padding: 8px 12px; border-radius: 8px;
+            font-size: 0.85rem; text-align: center; display: none;
+        }
+        .msg.error { background: rgba(200,50,50,0.15); color: #e06050; display: block; }
+        .msg.success { background: rgba(50,180,80,0.12); color: #50c070; display: block; }
+
+        .site-footer {
+            margin-top: 40px; padding: 16px 20px;
+            text-align: center; font-size: 0.8rem;
+            color: #5a4a3a;
+            border-top: 1px solid #3a2a18;
+            width: 100%; max-width: 1200px;
+            position: relative; z-index: 1;
+        }
+        .site-footer a {
+            color: #e8944a; text-decoration: none;
+        }
+        .site-footer a:hover {
+            color: #f0a050; text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            body { padding: 12px 8px; }
+            .container {
+                flex-direction: column-reverse; align-items: center;
+                gap: 16px;
+            }
+            .form-panel, .preview-panel {
+                width: 100%; max-width: 100%;
+                border-radius: 12px; padding: 16px;
+            }
+            .form-panel h2 { font-size: 1.1rem; margin-bottom: 14px; }
+            .form-group { margin-bottom: 12px; }
+            .form-group input[type="text"] { padding: 10px 12px; font-size: 16px; }
+            .photo-upload { padding: 16px; }
+            .btn { padding: 14px; font-size: 1.05rem; }
+            .preview-panel { padding: 12px; }
+            .preview-panel h2 { font-size: 1rem; margin-bottom: 10px; }
+            .image-controls { padding: 10px; }
+            .image-controls .hint { font-size: 0.7rem; }
+            .site-footer { margin-top: 24px; padding: 12px 8px; font-size: 0.75rem; }
+        }
+
+        @media (max-width: 380px) {
+            h1 { font-size: 1rem; }
+            .form-panel, .preview-panel { padding: 12px; }
+            .form-group input[type="text"] { padding: 8px 10px; }
+        }
+    </style>
+</head>
+<body>
+    <h1>पूर्व नागपुर (लकडगंज) रामजन्मोत्सव समिती</h1>
+    <p class="subtitle">रामनवमी रामधुन रैली - पोस्टर जनरेटर</p>
+
+    <div class="container">
+        <div class="form-panel">
+            <h2>माहिती भरा</h2>
+
+            <div class="form-group">
+                <label for="devoteeName">आपका नाम / Your Name</label>
+                <input type="text" id="devoteeName" placeholder="नाम लिखें...">
+            </div>
+
+            <div class="form-group">
+                <label>आपका फोटो / Your Photo</label>
+                <div class="photo-upload" id="photoUploadArea">
+                    <input type="file" id="devoteePhoto" accept="image/*">
+                    <div class="placeholder" id="photoPlaceholder">
+                        <span>📷</span>
+                        फोटो अपलोड करा<br><small>टॅप करा / Tap to upload</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="image-controls" id="imageControls">
+                <label>Zoom / आकार बदला
+                    <input type="range" id="zoomSlider" min="50" max="300" value="100" step="1">
+                </label>
+                <p class="hint">Preview वर ड्रॅग करा फोटो हलवण्यासाठी (Touch / Mouse)</p>
+            </div>
+
+            <button class="btn btn-download" id="downloadBtn" onclick="downloadPoster()" disabled>डाउनलोड करा</button>
+
+            <div class="msg" id="msgBox"></div>
+        </div>
+
+        <div class="preview-panel">
+            <h2>पोस्टर प्रीव्यू</h2>
+            <div class="canvas-wrapper" id="canvasWrapper">
+                <canvas id="previewCanvas" width="1080" height="1920"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('previewCanvas');
+        const ctx = canvas.getContext('2d');
+        const wrapper = document.getElementById('canvasWrapper');
+
+        // Photo box: rounded rectangle
+        const BOX = { x: 694, y: 1372, w: 314, h: 339, r: 40 };
+        // Name banner interior
+        const NAME_BOX = { x: 80, y: 1602, w: 555, h: 107 };
+        const NAME_CENTER = { x: 357, y: 1655 };
+
+        let templateImg = null;
+        let devoteeImg = null;
+
+        // Image transform state
+        let imgOffsetX = 0;
+        let imgOffsetY = 0;
+        let imgScale = 1;
+
+        // Drag state
+        let isDragging = false;
+        let dragStartX = 0;
+        let dragStartY = 0;
+        let dragStartOffX = 0;
+        let dragStartOffY = 0;
+
+        // Load template
+        templateImg = new Image();
+        templateImg.onload = () => render();
+        templateImg.src = 'template.png';
+
+        // Photo upload
+        document.getElementById('devoteePhoto').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                devoteeImg = new Image();
+                devoteeImg.onload = () => {
+                    autoFit();
+                    document.getElementById('photoPlaceholder').style.display = 'none';
+                    document.getElementById('imageControls').classList.add('active');
+                    render();
+                };
+                devoteeImg.src = evt.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        function autoFit() {
+            if (!devoteeImg) return;
+            const scaleX = BOX.w / devoteeImg.width;
+            const scaleY = BOX.h / devoteeImg.height;
+            imgScale = Math.max(scaleX, scaleY);
+            const drawW = devoteeImg.width * imgScale;
+            const drawH = devoteeImg.height * imgScale;
+            imgOffsetX = (BOX.w - drawW) / 2;
+            imgOffsetY = (BOX.h - drawH) / 2;
+            document.getElementById('zoomSlider').value = 100;
+        }
+
+        // Zoom slider
+        document.getElementById('zoomSlider').addEventListener('input', function() {
+            if (!devoteeImg) return;
+            const baseScaleX = BOX.w / devoteeImg.width;
+            const baseScaleY = BOX.h / devoteeImg.height;
+            const baseScale = Math.max(baseScaleX, baseScaleY);
+            const zoomFactor = this.value / 100;
+            const newScale = baseScale * zoomFactor;
+
+            const oldDrawW = devoteeImg.width * imgScale;
+            const oldDrawH = devoteeImg.height * imgScale;
+            const newDrawW = devoteeImg.width * newScale;
+            const newDrawH = devoteeImg.height * newScale;
+
+            const oldCenterX = imgOffsetX + oldDrawW / 2;
+            const oldCenterY = imgOffsetY + oldDrawH / 2;
+            imgOffsetX = oldCenterX - newDrawW / 2;
+            imgOffsetY = oldCenterY - newDrawH / 2;
+            imgScale = newScale;
+
+            render();
+        });
+
+        // Drag to pan on canvas
+        function getCanvasScale() {
+            return canvas.width / wrapper.getBoundingClientRect().width;
+        }
+
+        wrapper.addEventListener('mousedown', (e) => {
+            if (!devoteeImg) return;
+            isDragging = true;
+            dragStartX = e.clientX;
+            dragStartY = e.clientY;
+            dragStartOffX = imgOffsetX;
+            dragStartOffY = imgOffsetY;
+            e.preventDefault();
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            const scale = getCanvasScale();
+            const dx = (e.clientX - dragStartX) * scale;
+            const dy = (e.clientY - dragStartY) * scale;
+            imgOffsetX = dragStartOffX + dx;
+            imgOffsetY = dragStartOffY + dy;
+            render();
+        });
+
+        window.addEventListener('mouseup', () => { isDragging = false; });
+
+        // Touch support
+        wrapper.addEventListener('touchstart', (e) => {
+            if (!devoteeImg || e.touches.length !== 1) return;
+            isDragging = true;
+            const touch = e.touches[0];
+            dragStartX = touch.clientX;
+            dragStartY = touch.clientY;
+            dragStartOffX = imgOffsetX;
+            dragStartOffY = imgOffsetY;
+            e.preventDefault();
+        }, { passive: false });
+
+        wrapper.addEventListener('touchmove', (e) => {
+            if (!isDragging || e.touches.length !== 1) return;
+            const touch = e.touches[0];
+            const scale = getCanvasScale();
+            const dx = (touch.clientX - dragStartX) * scale;
+            const dy = (touch.clientY - dragStartY) * scale;
+            imgOffsetX = dragStartOffX + dx;
+            imgOffsetY = dragStartOffY + dy;
+            render();
+            e.preventDefault();
+        }, { passive: false });
+
+        wrapper.addEventListener('touchend', () => { isDragging = false; });
+
+        // Mouse wheel zoom
+        wrapper.addEventListener('wheel', (e) => {
+            if (!devoteeImg) return;
+            e.preventDefault();
+            const slider = document.getElementById('zoomSlider');
+            let val = parseInt(slider.value);
+            val += e.deltaY < 0 ? 5 : -5;
+            val = Math.max(50, Math.min(300, val));
+            slider.value = val;
+            slider.dispatchEvent(new Event('input'));
+        }, { passive: false });
+
+        function roundedRectPath(ctx, x, y, w, h, r) {
+            ctx.beginPath();
+            ctx.moveTo(x + r, y);
+            ctx.lineTo(x + w - r, y);
+            ctx.arcTo(x + w, y, x + w, y + r, r);
+            ctx.lineTo(x + w, y + h - r);
+            ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
+            ctx.lineTo(x + r, y + h);
+            ctx.arcTo(x, y + h, x, y + h - r, r);
+            ctx.lineTo(x, y + r);
+            ctx.arcTo(x, y, x + r, y, r);
+            ctx.closePath();
+        }
+
+        function render() {
+            if (!templateImg || !templateImg.complete) return;
+
+            const name = document.getElementById('devoteeName').value.trim();
+
+            // Draw template
+            ctx.drawImage(templateImg, 0, 0, 1080, 1920);
+
+            // Draw devotee photo clipped to rounded rect
+            if (devoteeImg) {
+                ctx.save();
+                roundedRectPath(ctx, BOX.x, BOX.y, BOX.w, BOX.h, BOX.r);
+                ctx.clip();
+
+                const drawW = devoteeImg.width * imgScale;
+                const drawH = devoteeImg.height * imgScale;
+                ctx.drawImage(
+                    devoteeImg,
+                    BOX.x + imgOffsetX,
+                    BOX.y + imgOffsetY,
+                    drawW,
+                    drawH
+                );
+                ctx.restore();
+
+                // Redraw template border around photo box so frame appears on top
+                ctx.save();
+                // Create a path that is the full canvas MINUS the photo box interior (inset by border width)
+                ctx.beginPath();
+                ctx.rect(0, 0, 1080, 1920);
+                // Cut out a slightly smaller rounded rect (the photo interior)
+                roundedRectPath(ctx, BOX.x + 4, BOX.y + 4, BOX.w - 8, BOX.h - 8, BOX.r - 4);
+                ctx.clip('evenodd');
+                ctx.drawImage(templateImg, 0, 0, 1080, 1920);
+                ctx.restore();
+            }
+
+            // Draw name on the red banner
+            if (name) {
+                // Auto-size: start at 42px, shrink to fit within banner width
+                let fontSize = 42;
+                ctx.font = 'bold ' + fontSize + 'px "Segoe UI", Arial, sans-serif';
+                while (ctx.measureText(name).width > NAME_BOX.w - 20 && fontSize > 16) {
+                    fontSize--;
+                    ctx.font = 'bold ' + fontSize + 'px "Segoe UI", Arial, sans-serif';
+                }
+                ctx.fillStyle = '#ffffff';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+                ctx.lineWidth = 2;
+                ctx.strokeText(name, NAME_CENTER.x, NAME_CENTER.y);
+                ctx.fillText(name, NAME_CENTER.x, NAME_CENTER.y);
+            }
+
+            document.getElementById('downloadBtn').disabled = false;
+        }
+
+        function showMsg(text, type) {
+            const box = document.getElementById('msgBox');
+            box.textContent = text;
+            box.className = 'msg ' + type;
+            setTimeout(() => { box.className = 'msg'; }, 3000);
+        }
+
+        function downloadPoster() {
+            const name = document.getElementById('devoteeName').value.trim() || 'poster';
+            const link = document.createElement('a');
+            link.download = 'Ramdhun_Rally_' + name.replace(/\s+/g, '_') + '.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+            showMsg('पोस्टर डाउनलोड झाले!', 'success');
+        }
+
+        // Auto-render on text input
+        document.getElementById('devoteeName').addEventListener('input', render);
+    </script>
+    <footer class="site-footer">
+        Developed by <a href="https://pinecoder.in" target="_blank">Aarohan Enterprises, Nagpur <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -1px;"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>
+    </footer>
+</body>
+</html>
