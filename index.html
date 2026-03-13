@@ -112,8 +112,25 @@
         .image-controls input[type="range"] {
             flex: 1; accent-color: #e8944a;
         }
+        .image-controls .zoom-value {
+            font-size: 0.8rem; color: #e8944a; min-width: 36px; text-align: right;
+        }
         .image-controls .hint {
             font-size: 0.75rem; color: #6a5540; margin-top: 4px;
+        }
+        .image-controls .btn-row {
+            display: flex; gap: 8px; margin-top: 8px;
+        }
+        .btn-reset {
+            flex: 1; padding: 8px; border: 1px solid #3a2a18; border-radius: 8px;
+            background: #1a1208; color: #cca070; font-size: 0.85rem;
+            cursor: pointer; font-weight: 600; transition: all 0.2s;
+        }
+        .btn-reset:hover {
+            border-color: #e8944a; color: #e8944a; background: #221810;
+        }
+        .canvas-wrapper.dragging-photo {
+            cursor: grabbing;
         }
 
         .btn {
@@ -236,8 +253,13 @@
             <div class="image-controls" id="imageControls">
                 <label>Zoom / आकार बदला
                     <input type="range" id="zoomSlider" min="50" max="300" value="100" step="1">
+                    <span class="zoom-value" id="zoomValue">100%</span>
                 </label>
-                <p class="hint">Preview वर ड्रॅग करा फोटो हलवण्यासाठी (Touch / Mouse)</p>
+                <div class="btn-row">
+                    <button class="btn-reset" onclick="resetImage()">Re-center</button>
+                    <button class="btn-reset" onclick="fitToFill()">Fill Box</button>
+                </div>
+                <p class="hint">Preview वर ड्रॅग करा फोटो हलवण्यासाठी | Pinch to zoom (Mobile) | Ctrl+Scroll to zoom (Desktop)</p>
             </div>
 
             <button class="btn btn-download" id="downloadBtn" onclick="downloadPoster()" disabled>डाउनलोड करा</button>
@@ -312,30 +334,88 @@
             imgOffsetX = (BOX.w - drawW) / 2;
             imgOffsetY = (BOX.h - drawH) / 2;
             document.getElementById('zoomSlider').value = 100;
+            updateZoomDisplay();
         }
 
-        // Zoom slider
-        document.getElementById('zoomSlider').addEventListener('input', function() {
+        function getBaseScale() {
+            const scaleX = BOX.w / devoteeImg.width;
+            const scaleY = BOX.h / devoteeImg.height;
+            return Math.max(scaleX, scaleY);
+        }
+
+        function updateZoomDisplay() {
+            const slider = document.getElementById('zoomSlider');
+            document.getElementById('zoomValue').textContent = slider.value + '%';
+        }
+
+        // Constrain image so it always covers the box (no empty gaps)
+        function constrainOffset() {
             if (!devoteeImg) return;
-            const baseScaleX = BOX.w / devoteeImg.width;
-            const baseScaleY = BOX.h / devoteeImg.height;
-            const baseScale = Math.max(baseScaleX, baseScaleY);
-            const zoomFactor = this.value / 100;
-            const newScale = baseScale * zoomFactor;
+            const drawW = devoteeImg.width * imgScale;
+            const drawH = devoteeImg.height * imgScale;
+            // Image must cover the entire box: left edge <= 0, right edge >= BOX.w
+            if (drawW >= BOX.w) {
+                imgOffsetX = Math.min(0, Math.max(BOX.w - drawW, imgOffsetX));
+            } else {
+                imgOffsetX = (BOX.w - drawW) / 2;
+            }
+            if (drawH >= BOX.h) {
+                imgOffsetY = Math.min(0, Math.max(BOX.h - drawH, imgOffsetY));
+            } else {
+                imgOffsetY = (BOX.h - drawH) / 2;
+            }
+        }
+
+        function applyZoom(newSliderVal) {
+            if (!devoteeImg) return;
+            const slider = document.getElementById('zoomSlider');
+            newSliderVal = Math.max(50, Math.min(300, newSliderVal));
+            slider.value = newSliderVal;
+            updateZoomDisplay();
+
+            const baseScale = getBaseScale();
+            const newScale = baseScale * (newSliderVal / 100);
 
             const oldDrawW = devoteeImg.width * imgScale;
             const oldDrawH = devoteeImg.height * imgScale;
             const newDrawW = devoteeImg.width * newScale;
             const newDrawH = devoteeImg.height * newScale;
 
+            // Zoom around the center of the current view
             const oldCenterX = imgOffsetX + oldDrawW / 2;
             const oldCenterY = imgOffsetY + oldDrawH / 2;
             imgOffsetX = oldCenterX - newDrawW / 2;
             imgOffsetY = oldCenterY - newDrawH / 2;
             imgScale = newScale;
 
+            constrainOffset();
             render();
+        }
+
+        // Zoom slider
+        document.getElementById('zoomSlider').addEventListener('input', function() {
+            applyZoom(parseInt(this.value));
         });
+
+        function resetImage() {
+            if (!devoteeImg) return;
+            autoFit();
+            render();
+        }
+
+        function fitToFill() {
+            if (!devoteeImg) return;
+            const scaleX = BOX.w / devoteeImg.width;
+            const scaleY = BOX.h / devoteeImg.height;
+            imgScale = Math.max(scaleX, scaleY);
+            const drawW = devoteeImg.width * imgScale;
+            const drawH = devoteeImg.height * imgScale;
+            imgOffsetX = (BOX.w - drawW) / 2;
+            imgOffsetY = (BOX.h - drawH) / 2;
+            document.getElementById('zoomSlider').value = 100;
+            updateZoomDisplay();
+            render();
+        }
 
         // Drag to pan on canvas
         function getCanvasScale() {
@@ -349,6 +429,7 @@
             dragStartY = e.clientY;
             dragStartOffX = imgOffsetX;
             dragStartOffY = imgOffsetY;
+            wrapper.classList.add('dragging-photo');
             e.preventDefault();
         });
 
@@ -359,47 +440,117 @@
             const dy = (e.clientY - dragStartY) * scale;
             imgOffsetX = dragStartOffX + dx;
             imgOffsetY = dragStartOffY + dy;
+            constrainOffset();
             render();
         });
 
-        window.addEventListener('mouseup', () => { isDragging = false; });
+        window.addEventListener('mouseup', () => {
+            isDragging = false;
+            wrapper.classList.remove('dragging-photo');
+        });
 
-        // Touch support
+        // Touch support — pan + pinch-to-zoom with scroll-intent detection
+        let lastPinchDist = 0;
+        let pinchStartScale = 1;
+        let touchIntentDecided = false; // whether we've decided drag vs scroll
+        let touchIsDrag = false;        // true = user wants to drag image, false = scrolling
+        const DRAG_THRESHOLD = 8;       // px to move before deciding intent
+
+        function getTouchDist(t1, t2) {
+            const dx = t1.clientX - t2.clientX;
+            const dy = t1.clientY - t2.clientY;
+            return Math.sqrt(dx * dx + dy * dy);
+        }
+
         wrapper.addEventListener('touchstart', (e) => {
-            if (!devoteeImg || e.touches.length !== 1) return;
-            isDragging = true;
-            const touch = e.touches[0];
-            dragStartX = touch.clientX;
-            dragStartY = touch.clientY;
-            dragStartOffX = imgOffsetX;
-            dragStartOffY = imgOffsetY;
-            e.preventDefault();
+            if (!devoteeImg) return;
+            if (e.touches.length === 1) {
+                // Don't preventDefault here — allow scrolling by default
+                const touch = e.touches[0];
+                dragStartX = touch.clientX;
+                dragStartY = touch.clientY;
+                dragStartOffX = imgOffsetX;
+                dragStartOffY = imgOffsetY;
+                isDragging = false;
+                touchIntentDecided = false;
+                touchIsDrag = false;
+                lastPinchDist = 0;
+            } else if (e.touches.length === 2) {
+                // Pinch always captures
+                isDragging = false;
+                touchIntentDecided = true;
+                touchIsDrag = false;
+                lastPinchDist = getTouchDist(e.touches[0], e.touches[1]);
+                pinchStartScale = parseInt(document.getElementById('zoomSlider').value);
+                e.preventDefault();
+            }
         }, { passive: false });
 
         wrapper.addEventListener('touchmove', (e) => {
-            if (!isDragging || e.touches.length !== 1) return;
+            if (!devoteeImg) return;
+
+            // Two-finger pinch zoom
+            if (e.touches.length === 2 && lastPinchDist > 0) {
+                const newDist = getTouchDist(e.touches[0], e.touches[1]);
+                const ratio = newDist / lastPinchDist;
+                const newVal = Math.round(pinchStartScale * ratio);
+                applyZoom(newVal);
+                e.preventDefault();
+                return;
+            }
+
+            if (e.touches.length !== 1) return;
             const touch = e.touches[0];
+            const dx = touch.clientX - dragStartX;
+            const dy = touch.clientY - dragStartY;
+
+            // Decide intent on first significant movement
+            if (!touchIntentDecided) {
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < DRAG_THRESHOLD) return; // not enough movement yet
+                touchIntentDecided = true;
+                // If mostly vertical → scroll, if horizontal or diagonal → drag image
+                if (Math.abs(dy) > Math.abs(dx) * 1.5) {
+                    touchIsDrag = false; // let the page scroll
+                    return;
+                } else {
+                    touchIsDrag = true;
+                    isDragging = true;
+                }
+            }
+
+            if (!touchIsDrag || !isDragging) return;
+
             const scale = getCanvasScale();
-            const dx = (touch.clientX - dragStartX) * scale;
-            const dy = (touch.clientY - dragStartY) * scale;
-            imgOffsetX = dragStartOffX + dx;
-            imgOffsetY = dragStartOffY + dy;
+            imgOffsetX = dragStartOffX + dx * scale;
+            imgOffsetY = dragStartOffY + dy * scale;
+            constrainOffset();
             render();
-            e.preventDefault();
+            e.preventDefault(); // only prevent scroll when we're dragging the image
         }, { passive: false });
 
-        wrapper.addEventListener('touchend', () => { isDragging = false; });
+        wrapper.addEventListener('touchend', (e) => {
+            if (e.touches.length < 2) {
+                lastPinchDist = 0;
+            }
+            if (e.touches.length === 0) {
+                isDragging = false;
+                touchIntentDecided = false;
+                touchIsDrag = false;
+            }
+        });
 
-        // Mouse wheel zoom
+        // Mouse wheel — only capture if user holds Ctrl (zoom), otherwise let page scroll
         wrapper.addEventListener('wheel', (e) => {
             if (!devoteeImg) return;
+            // Only hijack scroll when Ctrl is held (intentional zoom)
+            // This lets normal scrolling pass through
+            if (!e.ctrlKey) return;
             e.preventDefault();
             const slider = document.getElementById('zoomSlider');
             let val = parseInt(slider.value);
             val += e.deltaY < 0 ? 5 : -5;
-            val = Math.max(50, Math.min(300, val));
-            slider.value = val;
-            slider.dispatchEvent(new Event('input'));
+            applyZoom(val);
         }, { passive: false });
 
         function roundedRectPath(ctx, x, y, w, h, r) {
