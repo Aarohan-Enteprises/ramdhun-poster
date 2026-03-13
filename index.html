@@ -133,6 +133,22 @@
             cursor: grabbing;
         }
 
+        .gender-toggle {
+            display: flex; gap: 0; border-radius: 8px; overflow: hidden;
+            border: 1px solid #3a2a18;
+        }
+        .gender-toggle input[type="radio"] { display: none; }
+        .gender-toggle label {
+            flex: 1; padding: 10px 0; text-align: center;
+            font-size: 0.95rem; font-weight: 600; cursor: pointer;
+            background: #1a1208; color: #6a5540;
+            transition: all 0.2s;
+            display: block; margin-bottom: 0;
+        }
+        .gender-toggle input[type="radio"]:checked + label {
+            background: #e8944a; color: #1a0e04;
+        }
+
         .btn {
             width: 100%; padding: 12px; border: none; border-radius: 10px;
             font-size: 1rem; font-weight: 700; cursor: pointer; margin-top: 8px;
@@ -235,6 +251,16 @@
             <h2>माहिती भरा</h2>
 
             <div class="form-group">
+                <label>पोस्टर प्रकार / Poster Type</label>
+                <div class="gender-toggle">
+                    <input type="radio" name="gender" id="genderMale" value="male" checked>
+                    <label for="genderMale">पुरुष / Male</label>
+                    <input type="radio" name="gender" id="genderFemale" value="female">
+                    <label for="genderFemale">महिला / Female</label>
+                </div>
+            </div>
+
+            <div class="form-group">
                 <label for="devoteeName">आपका नाम / Your Name</label>
                 <input type="text" id="devoteeName" placeholder="नाम लिखें...">
             </div>
@@ -287,6 +313,8 @@
         const NAME_CENTER = { x: 357, y: 1655 };
 
         let templateImg = null;
+        let templateMaleImg = null;
+        let templateFemaleImg = null;
         let devoteeImg = null;
 
         // Image transform state
@@ -301,10 +329,30 @@
         let dragStartOffX = 0;
         let dragStartOffY = 0;
 
-        // Load template
-        templateImg = new Image();
-        templateImg.onload = () => render();
-        templateImg.src = 'template.png';
+        // Load both templates
+        let templatesLoaded = 0;
+        function onTemplateLoad() {
+            templatesLoaded++;
+            if (templatesLoaded >= 2) {
+                templateImg = templateMaleImg;
+                render();
+            }
+        }
+        templateMaleImg = new Image();
+        templateMaleImg.onload = onTemplateLoad;
+        templateMaleImg.src = 'template.png';
+
+        templateFemaleImg = new Image();
+        templateFemaleImg.onload = onTemplateLoad;
+        templateFemaleImg.src = 'template-female.png';
+
+        // Gender toggle
+        document.querySelectorAll('input[name="gender"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                templateImg = this.value === 'female' ? templateFemaleImg : templateMaleImg;
+                render();
+            });
+        });
 
         // Photo upload
         document.getElementById('devoteePhoto').addEventListener('change', function(e) {
